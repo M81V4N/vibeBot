@@ -62,6 +62,39 @@ def decipher(alphabet, key, i):
         return alphabet[alphabet.index(key) - i]
 
 
+def fileToDict(filename):
+
+    file = open(filename, 'r')
+
+    out = file.read().splitlines()
+    for line in out:
+        out[out.index(line)] = line.split('|')
+
+    file.close()
+    return dict(out)
+        
+
+def dictToFile(dc, filename):
+    try:
+        file.close()
+    except:
+        pass
+
+    file = open(filename, 'w')
+    out = ''
+
+    for element in dc:
+        out += f'{element}|{dc[element]}\n'
+
+    file.write(out)
+    file.close()
+
+
+def calcSpaces(el, list):
+    return ' ' * ( len(max(list, key=len)) - len(el))
+
+
+
 
 @bot.event
 async def on_message(message):
@@ -70,7 +103,7 @@ async def on_message(message):
             await message.channel.send('https://cdn.discordapp.com/attachments/774745923552542780/775781069592199198/852bdc314b0541ab75f4f1598dad2dcb.png')
             t.sleep(5)
             await message.channel.send('https://cdn.discordapp.com/attachments/774745923552542780/775781248546635796/rizhg2qrqqv31.png')
-            
+
     await bot.process_commands(message)
 
 
@@ -166,25 +199,39 @@ async def spammypasta(ctx, message):
 
 
 @bot.command()
-async def save(ctx, msgID: int, name): # MAKE IT WORK ON LINKS, AND ADD ERROR AND EXISTING COPY HANDLING
-    # ---- GET FILE LINK ----
-    msg = await ctx.fetch_message(msgID)
-    image_url = msg.attachments[0].url
+async def save(ctx, name, link):
+    saved_dict = fileToDict('saved.txt')
 
-    # ---- DOWNLOAD -----
-    resp = requests.get(image_url, stream=True)
-    local_file = open(f'saved/{name}.jpg', 'wb')
-    # Set decode_content value to True, otherwise the downloaded image file's size will be zero.
-    resp.raw.decode_content = True
-    # Copy the response stream raw data to local image file.
-    shutil.copyfileobj(resp.raw, local_file)
-    # Remove the image url response object.
-    del resp
-    local_file.close()
+    if name not in saved_dict:
+        saved_dict.update({name:link})
+        dictToFile(saved_dict, 'saved.txt')
+        await ctx.send('```// LINK SAVED```')
+
+    else:
+        await ctx.send('```// NAME TAKEN```')
+
 
 @bot.command()
-async def load(ctx, name): # MAKE IT WORK ON LINKS NO PICTURES, AND ADD ERROR HANDLING
-    await ctx.send(file=discord.File(f'saved/{name}.jpg'))
+async def load(ctx, name):
+    try:
+        await ctx.send(fileToDict('saved.txt')[name])
+
+    except:
+        await ctx.send('```// FILE NOT FOUND```')
+
+
+@bot.command()
+async def list(ctx):
+    out = '```\n'
+    saved_dict = fileToDict('saved.txt')
+
+    for element in saved_dict:
+        out += f'{calcSpaces(element, saved_dict)}{element} - {saved_dict[element]}\n'
+
+    await ctx.send(out + '```')
+
+
+
 
 
 bot.remove_command('help')
@@ -194,9 +241,13 @@ file.close()
 @bot.command()
 async def help(ctx):
     embed = discord.Embed(title="[REDACTED]", description=f"||// {r.choice(helpMessages)}||")
-    embed.add_field(name=">> caesar [MODE] [i] [TEXT]", value='CAESAR CIPHER SCRIPT. [D]ECIPHER/[C]IPHER. WHEN i = 0, BRUTE FORCE MODE ACTIVE')
-    embed.add_field(name=">> annoy [TEXT]", value="SPOILERS EVERY CHARACTER. MAX 398 CHARS.")
-    embed.add_field(name=">> spammypasta [TEXT]", value="REPEATS TEXT TO THE DISCORD CHARACTER MESSAGE LIMIT.")
+    embed.add_field(name=">> caesar [mode] [i] [text]", value='CAESAR CIPHER SCRIPT. [D]ECIPHER/[C]IPHER. WHEN i = 0, BRUTE FORCE MODE ACTIVE.')
+    embed.add_field(name=">> annoy [text]", value="SPOILERS EVERY CHARACTER. MAX 398 CHARS.")
+    embed.add_field(name=">> spammypasta [text]", value="REPEATS TEXT TO THE DISCORD CHARACTER MESSAGE LIMIT.")
+    embed.add_field(name=">> save [name] [link]", value="SAVE A PHOTO LINK. LOAD THE LINK WITH '>> load'.")
+    embed.add_field(name=">> load [name]", value="LOAD A PHOTO LINK.")
+    embed.add_field(name=">> list", value="LISTS ALL CURRENTLY SAVED LINKS.")
+
     await ctx.send(embed=embed)
 
 
