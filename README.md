@@ -1,5 +1,11 @@
 # [REDACTED]
-a bunch of scripts duct-taped together in order to create a discord bot
 
+Python discord bot with a variety of tools, made for one specific server
+It has been my project for about two years now
 
-##### it's a mess of multiple pointless ideas, really...
+Notable functions:
+  - Multiple different funky, goofy and fun commands
+  - Saving and loading important content
+  - Roleplaying and RPG tools
+  - Utilitary admin commands
+  - Secret Santa
